@@ -5,6 +5,19 @@
 #include <boost/beast/version.hpp>
 #include <boost/asio.hpp>
 
+#include <chrono>
+#include <cstdlib>
+#include <ctime>
+#include <codecvt>
+#include <iomanip>
+#include <iostream>
+#include <locale>
+#include <sstream>
+#include <string>
+
+#include "../spider/html_parser.h"
+#include "../database/database.h"
+
 namespace beast = boost::beast;
 namespace http = beast::http;
 namespace net = boost::asio;
@@ -36,7 +49,11 @@ protected:
 	void checkDeadline();
 
 public:
-	HttpConnection(tcp::socket socket);
+	HttpConnection(tcp::socket socket, Database& database);
 	void start();
+
+private:
+    Database& db;
 };
 
+void httpServer(tcp::acceptor& acceptor, tcp::socket& socket);

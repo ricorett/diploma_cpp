@@ -1,16 +1,9 @@
 #include "http_connection.h"
 
-#include <sstream>
-#include <iomanip>
-#include <locale>
-#include <codecvt>
-#include <iostream>
-
 namespace beast = boost::beast;
 namespace http = beast::http;
 namespace net = boost::asio;
 using tcp = boost::asio::ip::tcp;
-
 
 
 std::string url_decode(const std::string& encoded) {
@@ -37,10 +30,8 @@ std::string convert_to_utf8(const std::string& str) {
 	return url_decoded;
 }
 
-HttpConnection::HttpConnection(tcp::socket socket)
-	: socket_(std::move(socket))
-{
-}
+HttpConnection::HttpConnection(tcp::socket socket, Database& database)
+        : socket_(std::move(socket)), db(database) {}
 
 
 void HttpConnection::start()
@@ -126,72 +117,51 @@ void HttpConnection::createResponseGet()
 	}
 }
 
-void HttpConnection::createResponsePost()
-{
-	if (request_.target() == "/")
-	{
-		std::string s = buffers_to_string(request_.body().data());
+void HttpConnection::createResponsePost() {
+    if (request_.target() == "/") {
+        std::string requestBody = buffers_to_string(request_.body().data());
 
-		std::cout << "POST data: " << s << std::endl;
+        size_t pos = requestBody.find('=');
+        if (pos == std::string::npos) {
+            response_.result(http::status::bad_request);
+            beast::ostream(response_.body()) << "Invalid search request";
+            return;
+        }
 
-		size_t pos = s.find('=');
-		if (pos == std::string::npos)
-		{
-			response_.result(http::status::not_found);
-			response_.set(http::field::content_type, "text/plain");
-			beast::ostream(response_.body()) << "File not found\r\n";
-			return;
-		}
+        std::string query = requestBody.substr(pos + 1);
+        std::vector<std::string> words = extractWordsFromHtml(query);
 
-		std::string key = s.substr(0, pos);
-		std::string value = s.substr(pos + 1);
+        if (words.empty()) {
+            response_.result(http::status::bad_request);
+            beast::ostream(response_.body()) << "No valid words in search query";
+            return;
+        }
 
-		std::string utf8value = convert_to_utf8(value);
+        std::vector<std::pair<std::string, int>> searchResults = db.searchDocuments(words);
 
-		if (key != "search")
-		{
-			response_.result(http::status::not_found);
-			response_.set(http::field::content_type, "text/plain");
-			beast::ostream(response_.body()) << "File not found\r\n";
-			return;
-		}
+        response_.set(http::field::content_type, "text/html");
+        beast::ostream(response_.body())
+                << "<html>\n"
+                << "<head><meta charset=\"UTF-8\"><title>Search Results</title></head>\n"
+                << "<body>\n"
+                << "<h1>Search Results</h1>\n";
 
-		// TODO: Fetch your own search results here
+        if (searchResults.empty()) {
+            beast::ostream(response_.body()) << "<p>No results found.</p>\n";
+        } else {
+            beast::ostream(response_.body()) << "<ul>\n";
+            for (const auto& [url, relevance] : searchResults) {
+                beast::ostream(response_.body())
+                        << "<li><a href=\"" << url << "\">" << url << "</a> (Relevance: " << relevance << ")</li>\n";
+            }
+            beast::ostream(response_.body()) << "</ul>\n";
+        }
 
-		std::vector<std::string> searchResult = {
-			"https://en.wikipedia.org/wiki/Main_Page",
-			"https://en.wikipedia.org/wiki/Wikipedia",
-		};
-
-
-		response_.set(http::field::content_type, "text/html");
-		beast::ostream(response_.body())
-			<< "<html>\n"
-			<< "<head><meta charset=\"UTF-8\"><title>Search Engine</title></head>\n"
-			<< "<body>\n"
-			<< "<h1>Search Engine</h1>\n"
-			<< "<p>Response:<p>\n"
-			<< "<ul>\n";
-
-		for (const auto& url : searchResult) {
-
-			beast::ostream(response_.body())
-				<< "<li><a href=\""
-				<< url << "\">"
-				<< url << "</a></li>";
-		}
-
-		beast::ostream(response_.body())
-			<< "</ul>\n"
-			<< "</body>\n"
-			<< "</html>\n";
-	}
-	else
-	{
-		response_.result(http::status::not_found);
-		response_.set(http::field::content_type, "text/plain");
-		beast::ostream(response_.body()) << "File not found\r\n";
-	}
+        beast::ostream(response_.body()) << "</body>\n</html>\n";
+    } else {
+        response_.result(http::status::not_found);
+        beast::ostream(response_.body()) << "Page not found";
+    }
 }
 
 void HttpConnection::writeResponse()
@@ -223,4 +193,5 @@ void HttpConnection::checkDeadline()
 			}
 		});
 }
+
 

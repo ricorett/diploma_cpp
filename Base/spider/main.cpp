@@ -6,21 +6,22 @@
 #include <condition_variable>
 
 #include "http_utils.h"
+#include "html_parser.h"
 #include <functional>
-#include "database/database.h"
+#include "../database/database.h"
 
 std::mutex mtx;
 std::condition_variable cv;
 std::queue<std::function<void()>> tasks;
 bool exitThreadPool = false;
 
-std::string dbName = "search_db";
-std::string dbUser = "postgres";
-std::string dbPassword = "password";
-std::string dbHost = "localhost";
-int dbPort = 5432;
+//std::string dbName = "search_db";
+//std::string dbUser = "postgres";
+//std::string dbPassword = "password";
+//std::string dbHost = "localhost";
+//int dbPort = 5432;
 
-Database db(dbName, dbUser, dbPassword, dbHost, dbPort);
+Database db("/Users/lana/Desktop/work/netology/diploma/Base/database/config.ini");
 
 void threadPoolWorker() {
 	std::unique_lock<std::mutex> lock(mtx);
@@ -37,49 +38,60 @@ void threadPoolWorker() {
 		}
 	}
 }
-void parseLink(const Link& link, int depth)
-{
-	try {
 
-		std::this_thread::sleep_for(std::chrono::milliseconds(500));
+void parseLink(const Link& link, int depth) {
+    try {
+        std::this_thread::sleep_for(std::chrono::milliseconds(500));
 
-		std::string html = getHtmlContent(link);
+        std::string html = getHtmlContent(link);
+        if (html.empty()) {
+            std::cout << "Failed to get HTML Content for: " << link.hostName + link.query << std::endl;
+            return;
+        }
 
-		if (html.size() == 0)
-		{
-			std::cout << "Failed to get HTML Content" << std::endl;
-			return;
-		}
+        std::vector<std::string> words = extractWordsFromHtml(html);
+        if (words.empty()) {
+            std::cout << "No valid words extracted from: " << link.hostName + link.query << std::endl;
+            return;
+        }
 
-		// TODO: Parse HTML code here on your own
+        // Сохраняем документ в БД
+        int docId = db.insertDocument(link.hostName + link.query, html);
+        if (docId == -1) {
+            std::cout << "Failed to insert document: " << link.hostName + link.query << std::endl;
+            return;
+        }
 
-		std::cout << "html content:" << std::endl;
-		std::cout << html << std::endl;
+        // Подсчет частотности слов
+        std::unordered_map<std::string, int> wordFrequency;
+        for (const auto& word : words) {
+            wordFrequency[word]++;
+        }
 
-		// TODO: Collect more links from HTML code and add them to the parser like that:
+        // Сохраняем слова в БД
+        db.insertWordsWithFrequency(docId, wordFrequency);
 
-		std::vector<Link> links = {
-			{ProtocolType::HTTPS, "en.wikipedia.org", "/wiki/Wikipedia"},
-			{ProtocolType::HTTPS, "wikimediafoundation.org", "/"},
-		};
+        std::cout << "Indexed document: " << link.hostName + link.query
+                  << " (" << words.size() << " words, " << wordFrequency.size() << " unique)" << std::endl;
 
-		if (depth > 0) {
-			std::lock_guard<std::mutex> lock(mtx);
+        // Собираем ссылки для дальнейшего обхода (пока заглушка)
+        std::vector<Link> links = {
+                {ProtocolType::HTTPS, "en.wikipedia.org", "/wiki/Wikipedia"},
+                {ProtocolType::HTTPS, "wikimediafoundation.org", "/"}
+        };
 
-			size_t count = links.size();
-			size_t index = 0;
-			for (auto& subLink : links)
-			{
-				tasks.push([subLink, depth]() { parseLink(subLink, depth - 1); });
-			}
-			cv.notify_one();
-		}
-	}
-	catch (const std::exception& e)
-	{
-		std::cout << e.what() << std::endl;
-	}
-
+        // Добавляем ссылки в очередь
+        if (depth > 0) {
+            std::lock_guard<std::mutex> lock(mtx);
+            for (auto& subLink : links) {
+                tasks.push([subLink, depth]() { parseLink(subLink, depth - 1); });
+            }
+            cv.notify_one();
+        }
+    }
+    catch (const std::exception& e) {
+        std::cout << "Error parsing link " << link.hostName + link.query << ": " << e.what() << std::endl;
+    }
 }
 
 
@@ -87,7 +99,6 @@ void parseLink(const Link& link, int depth)
 int main()
 {
 	try {
-        db.initializeTables();
 		int numThreads = std::thread::hardware_concurrency();
 		std::vector<std::thread> threadPool;
 

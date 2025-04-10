@@ -1,32 +1,23 @@
-#include <chrono>
-#include <cstdlib>
-#include <ctime>
+//#include <Windows.h>
 #include <iostream>
-#include <string>
-
-#include <string>
-#include <iostream>
-
 #include "http_connection.h"
-#include <Windows.h>
 
+Database db("/Users/lana/Desktop/work/netology/diploma/Base/database/config.ini");
 
-void httpServer(tcp::acceptor& acceptor, tcp::socket& socket)
-{
-	acceptor.async_accept(socket,
-		[&](beast::error_code ec)
-		{
-			if (!ec)
-				std::make_shared<HttpConnection>(std::move(socket))->start();
-			httpServer(acceptor, socket);
-		});
+void httpServer(tcp::acceptor& acceptor, tcp::socket& socket) {
+    acceptor.async_accept(socket,
+                          [&](beast::error_code ec) {
+                              if (!ec)
+                                  std::make_shared<HttpConnection>(std::move(socket), db)->start();
+                              httpServer(acceptor, socket);
+                          });
 }
 
 
-int main(int argc, char* argv[])
+int main()
 {
-	SetConsoleCP(CP_UTF8);
-	SetConsoleOutputCP(CP_UTF8);
+//	SetConsoleCP(CP_UTF8);
+//	SetConsoleOutputCP(CP_UTF8);
 
 	try
 	{

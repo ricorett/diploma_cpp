@@ -1,24 +1,5 @@
 #include "http_utils.h"
 
-#include <regex>
-#include <iostream>
-
-#include <boost/beast/core.hpp>
-#include <boost/beast/ssl.hpp>
-#include <boost/beast/http.hpp>
-#include <boost/beast/version.hpp>
-#include <boost/asio/connect.hpp>
-#include <boost/asio/ip/tcp.hpp>
-#include <boost/asio/ssl.hpp>
-#include <openssl/ssl.h>
-
-namespace beast = boost::beast;
-namespace http = beast::http;
-namespace net = boost::asio;
-namespace ip = boost::asio::ip;
-namespace ssl = boost::asio::ssl;
-
-using tcp = boost::asio::ip::tcp;
 
 bool isText(const boost::beast::multi_buffer::const_buffers_type& b)
 {
@@ -68,7 +49,7 @@ std::string getHtmlContent(const Link& link)
 			}
 
 			ip::tcp::resolver resolver(ioc);
-			get_lowest_layer(stream).connect(resolver.resolve({ host, "https" }));
+			get_lowest_layer(stream).connect(resolver.resolve( host, "https" ));
 			get_lowest_layer(stream).expires_after(std::chrono::seconds(30));
 
 
