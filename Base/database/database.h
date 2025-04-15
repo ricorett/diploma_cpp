@@ -11,7 +11,9 @@
 
 class Database {
 public:
-    explicit Database(const std::string& config_path = "config.ini");
+//    explicit Database(const std::string& config_path = "config.ini");
+//    explicit Database(const std::string& connection_string);
+    explicit Database();
 
     int insertDocument(const std::string& url, const std::string& content);
     int insertWord(const std::string& word);

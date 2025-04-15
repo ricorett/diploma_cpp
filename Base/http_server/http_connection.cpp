@@ -194,4 +194,12 @@ void HttpConnection::checkDeadline()
 		});
 }
 
+void httpServer(tcp::acceptor& acceptor, tcp::socket& socket, Database& db) {
+    acceptor.async_accept(socket,
+                          [&](beast::error_code ec) {
+                              if (!ec)
+                                  std::make_shared<HttpConnection>(std::move(socket), db)->start();
+                              httpServer(acceptor, socket, db);
+                          });
+}
 

@@ -56,4 +56,4 @@ private:
     Database& db;
 };
 
-void httpServer(tcp::acceptor& acceptor, tcp::socket& socket);
+void httpServer(tcp::acceptor& acceptor, tcp::socket& socket, Database& db);

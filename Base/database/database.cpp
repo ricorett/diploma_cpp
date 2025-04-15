@@ -1,40 +1,59 @@
 #include "database.h"
 #include <iostream>
 
-Database::Database(const std::string& config_path) {
-    namespace fs = std::filesystem;
+//Database::Database(const std::string& config_path) {
+//    namespace fs = std::filesystem;
+//
+//    try {
+//        if (!fs::exists(config_path)) {
+//            throw std::runtime_error("Config file not found: " + config_path);
+//        }
+//
+//        boost::property_tree::ptree pt;
+//        boost::property_tree::ini_parser::read_ini(config_path, pt);
+//
+//        std::string dbname = pt.get<std::string>("database.dbname");
+//        std::string user = pt.get<std::string>("database.user");
+//        std::string password = pt.get<std::string>("database.password");
+//        std::string host = pt.get<std::string>("database.host");
+//        int port = pt.get<int>("database.port");
+//
+//        std::cout << "Connecting to: "
+//                  << "dbname=" << dbname
+//                  << " user=" << user
+//                  << " host=" << host
+//                  << " port=" << port << std::endl;
+//
+//        conn = pqxx::connection(
+//                fmt::format("dbname={} user={} password={} host={} port={}",
+//                            dbname, user, password, host, port)
+//        );
+//
+//    } catch (const std::exception& e) {
+//        std::cerr << "FATAL ERROR: " << e.what() << std::endl;
+//        std::exit(1); // Завершаем программу при ошибке
+//    }
+//}
 
+//Database::Database(const std::string& connection_string) {
+//    try {
+//        conn = pqxx::connection(connection_string);
+//        std::cout << "Connected to: " << conn.dbname() << std::endl;
+//    } catch (const std::exception& e) {
+//        std::cerr << "FATAL ERROR: " << e.what() << std::endl;
+//        std::exit(1);
+//    }
+//}
+
+Database::Database() {
     try {
-        if (!fs::exists(config_path)) {
-            throw std::runtime_error("Config file not found: " + config_path);
-        }
-
-        boost::property_tree::ptree pt;
-        boost::property_tree::ini_parser::read_ini(config_path, pt);
-
-        std::string dbname = pt.get<std::string>("database.dbname");
-        std::string user = pt.get<std::string>("database.user");
-        std::string password = pt.get<std::string>("database.password");
-        std::string host = pt.get<std::string>("database.host");
-        int port = pt.get<int>("database.port");
-
-        std::cout << "Connecting to: "
-                  << "dbname=" << dbname
-                  << " user=" << user
-                  << " host=" << host
-                  << " port=" << port << std::endl;
-
-        conn = pqxx::connection(
-                fmt::format("dbname={} user={} password={} host={} port={}",
-                            dbname, user, password, host, port)
-        );
-
+        conn = pqxx::connection("user=lana password=1234 dbname=search_db host=localhost port=5432");
+        std::cout << "Connected to: " << conn.dbname() << std::endl;
     } catch (const std::exception& e) {
         std::cerr << "FATAL ERROR: " << e.what() << std::endl;
-        std::exit(1); // Завершаем программу при ошибке
+        std::exit(1);
     }
 }
-
 int Database::insertDocument(const std::string& url, const std::string& content) {
     try {
         pqxx::work txn(conn);

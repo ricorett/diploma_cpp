@@ -2,26 +2,19 @@
 #include <iostream>
 #include "http_connection.h"
 
-Database db("/Users/lana/Desktop/work/netology/diploma/Base/database/config.ini");
-
-void httpServer(tcp::acceptor& acceptor, tcp::socket& socket) {
-    acceptor.async_accept(socket,
-                          [&](beast::error_code ec) {
-                              if (!ec)
-                                  std::make_shared<HttpConnection>(std::move(socket), db)->start();
-                              httpServer(acceptor, socket);
-                          });
-}
-
-
 int main()
 {
 //	SetConsoleCP(CP_UTF8);
 //	SetConsoleOutputCP(CP_UTF8);
+//    Database db("/Users/lana/Desktop/work/netology/diploma/Base/database/config.ini");
+
+
+
+
 
 	try
 	{
-
+        Database db;
 		auto const address = net::ip::make_address("0.0.0.0");
 		unsigned short port = 8080;
 
@@ -29,7 +22,7 @@ int main()
 
 		tcp::acceptor acceptor{ioc, { address, port }};
 		tcp::socket socket{ioc};
-		httpServer(acceptor, socket);
+        httpServer(acceptor, socket, db);
 
 		std::cout << "Open browser and connect to http://localhost:8080 to see the web server operating" << std::endl;
 
