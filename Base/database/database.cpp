@@ -1,7 +1,7 @@
 #include "database.h"
 #include <iostream>
 
-//Database::Database(const std::string& config_path) {
+//Database::Database(const std::string& config_path) : conn (connection_string) {
 //    namespace fs = std::filesystem;
 //
 //    try {
@@ -35,19 +35,11 @@
 //    }
 //}
 
-//Database::Database(const std::string& connection_string) {
-//    try {
-//        conn = pqxx::connection(connection_string);
-//        std::cout << "Connected to: " << conn.dbname() << std::endl;
-//    } catch (const std::exception& e) {
-//        std::cerr << "FATAL ERROR: " << e.what() << std::endl;
-//        std::exit(1);
-//    }
-//}
-
-Database::Database() {
+Database::Database(const std::string& connection_string)
+        :conn{ connection_string }
+{
     try {
-        conn = pqxx::connection("user=lana password=1234 dbname=search_db host=localhost port=5432");
+
         std::cout << "Connected to: " << conn.dbname() << std::endl;
     } catch (const std::exception& e) {
         std::cerr << "FATAL ERROR: " << e.what() << std::endl;

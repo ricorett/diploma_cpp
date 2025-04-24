@@ -88,7 +88,7 @@ void parseLink(const Link& link, int depth, Database& db) {
 int main() {
     try {
         // Создаем объект Database внутри main()
-        Database db;
+        Database db{ "user=lana password=1234 dbname=search_db host=localhost port=5432" };
 
         int numThreads = std::thread::hardware_concurrency();
         std::vector<std::thread> threadPool;

@@ -14,7 +14,7 @@ int main()
 
 	try
 	{
-        Database db;
+        Database db{ "user=lana password=1234 dbname=search_db host=localhost port=5432" };
 		auto const address = net::ip::make_address("0.0.0.0");
 		unsigned short port = 8080;
 
