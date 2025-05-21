@@ -6,6 +6,8 @@ set(CMAKE_CXX_STANDARD 23)
 add_library(DatabaseLib STATIC
         database.cpp
         database.h
+        ../config/config_utils.cpp
+        ../config/config_utils.h
 )
 find_package(fmt REQUIRED)
 # Настройка зависимостей

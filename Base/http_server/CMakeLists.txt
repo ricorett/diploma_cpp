@@ -8,6 +8,8 @@ add_executable(HttpServerApp
 		http_connection.h
 		http_connection.cpp
 		../spider/html_parser.cpp
+		../config/config_utils.cpp
+		../config/config_utils.h
 )
 
 target_compile_features(HttpServerApp PRIVATE cxx_std_23)

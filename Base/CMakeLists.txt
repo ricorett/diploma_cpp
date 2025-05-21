@@ -3,18 +3,16 @@ project(CppDiplomProject)
 cmake_policy(SET CMP0144 NEW)
 cmake_policy(SET CMP0002 NEW)
 
-# Указываем стандарт C++
+
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-include_directories(/opt/homebrew/include) # macOS
+include_directories(/opt/homebrew/include)
 link_directories(/opt/homebrew/lib)
 
-# Пути к библиотекам
 set(OPENSSL_ROOT_DIR /opt/homebrew/opt/openssl)
 set(BOOST_ROOT /opt/homebrew/opt/boost)
 
-# Подключение зависимостей
 find_package(PostgreSQL REQUIRED)
 find_package(Boost REQUIRED COMPONENTS system thread locale program_options)
 find_package(fmt REQUIRED)
@@ -28,7 +26,8 @@ include_directories(
         ${fmt_INCLUDE_DIRS}
 )
 
-# Добавляем подпроекты
-add_subdirectory(database)
-add_subdirectory(spider)
-add_subdirectory(http_server)
+
+ add_subdirectory(database)
+ add_subdirectory(spider)
+ add_subdirectory(http_server)
+ add_subdirectory(config)

@@ -11,6 +11,8 @@ add_executable(SpiderApp
 		../database/database.h
 	html_parser.cpp
 	html_parser.h
+		../config/config_utils.cpp
+		../config/config_utils.h
 )
 
 target_compile_features(SpiderApp PRIVATE cxx_std_17) 
