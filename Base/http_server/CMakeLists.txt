@@ -10,6 +10,8 @@ add_executable(HttpServerApp
 		../spider/html_parser.cpp
 		../config/config_utils.cpp
 		../config/config_utils.h
+		../spider/http_utils.cpp
+		../spider/http_utils.h
 )
 
 target_compile_features(HttpServerApp PRIVATE cxx_std_23)

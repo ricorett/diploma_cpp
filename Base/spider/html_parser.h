@@ -13,11 +13,14 @@
 #include <thread>
 #include <unordered_set>
 #include <vector>
+#include <boost/algorithm/string/case_conv.hpp>
+
 
 #include "../database/database.h"
 #include "http_utils.h"
 #include "link.h"
 
+void processStartUrl(const std::string& startUrl, int depth, Database& db);
 std::vector<std::string> extractWordsFromHtml(const std::string& html);
 void extractText(GumboNode* node, std::string& output);
 void cleanText(std::string& text);

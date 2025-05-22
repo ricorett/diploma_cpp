@@ -86,26 +86,31 @@ void parseLink(const Link& link, int depth, Database& db) {
   }
 }
 
+void processStartUrl(const std::string& startUrl, int depth, Database& db) {
+  try {
+    Link link = parseLinkFromUrl(startUrl);
+    std::lock_guard<std::mutex> lock(mtx);
+    tasks.push([link, depth, &db]() { parseLink(link, depth, db); });
+    cv.notify_one();
+  } catch (const std::exception& e) {
+    std::cerr << "[ERROR] Invalid start URL: " << e.what() << std::endl;
+  }
+}
+
 int main() {
   try {
     Database db(loadConnectionString("../config/config.ini"));
+    db.initializeTables();
+
     int numThreads = std::thread::hardware_concurrency();
     std::vector<std::thread> threadPool;
-
     for (int i = 0; i < numThreads; ++i) {
       threadPool.emplace_back([&db]() { threadPoolWorker(db); });
     }
 
-    std::string startUrl = loadStartUrl("config.ini");
-    int depth = loadSpiderDepth("config.ini");
-    Link link =
-        parseLinkFromUrl(startUrl); 
-
-    {
-      std::lock_guard<std::mutex> lock(mtx);
-      tasks.push([link, depth, &db]() { parseLink(link, depth, db); });
-      cv.notify_one();
-    }
+    std::string startUrl = loadStartUrl("../config/config.ini");
+    int depth = loadSpiderDepth("../config/config.ini");
+    processStartUrl(startUrl, depth, db);
 
     std::this_thread::sleep_for(std::chrono::seconds(2));
 
@@ -118,8 +123,9 @@ int main() {
     for (auto& t : threadPool) {
       t.join();
     }
+
   } catch (const std::exception& e) {
-    std::cout << "Main error: " << e.what() << std::endl;
+    std::cerr << "Main error: " << e.what() << std::endl;
   }
   return 0;
 }

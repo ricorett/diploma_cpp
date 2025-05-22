@@ -10,6 +10,8 @@ int main() {
 
   try {
     Database db(loadConnectionString("../config/config.ini"));
+    db.initializeTables();
+
     auto const address = net::ip::make_address("0.0.0.0");
     unsigned short port = 8080;
 

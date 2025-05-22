@@ -1,5 +1,10 @@
 #include "html_parser.h"
 
+// extern std::mutex mtx;
+// extern std::condition_variable cv;
+// extern std::queue<std::function<void()>> tasks;
+
+
 void cleanText(std::string& text) {
   text = std::regex_replace(text, std::regex(R"([^a-zA-Zа-яА-ЯёЁ\s])"), " ");
   std::transform(text.begin(), text.end(), text.begin(), ::tolower);
@@ -29,10 +34,16 @@ std::vector<std::string> extractWordsFromHtml(const std::string& html) {
   std::string word;
   std::vector<std::string> words;
   while (iss >> word) {
+    word.erase(std::remove_if(word.begin(), word.end(),
+                                  [](char c) { return std::ispunct(c); }),
+                   word.end());
+
     if (word.length() >= 3 && word.length() <= 32) {
+      boost::algorithm::to_lower(word);
       words.push_back(word);
     }
   }
+  std::cerr << "[DEBUG] Extracted " << words.size() << " words." << std::endl;
   return words;
 }
 
@@ -40,8 +51,7 @@ Link parseLinkFromUrl(const std::string& url) {
   std::regex urlRegex(R"((http|https)://([^/]+)(/.*)?)");
   std::smatch matches;
   if (std::regex_match(url, matches, urlRegex)) {
-    ProtocolType proto =
-        matches[1] == "https" ? ProtocolType::HTTPS : ProtocolType::HTTP;
+    ProtocolType proto = matches[1] == "https" ? ProtocolType::HTTPS : ProtocolType::HTTP;
     std::string host = matches[2];
     std::string path = matches[3].matched ? matches[3].str() : "/";
     return {proto, host, path};
@@ -99,3 +109,4 @@ std::string generateHtmlResults(
   html << "</body>\n</html>";
   return html.str();
 }
+

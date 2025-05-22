@@ -12,15 +12,32 @@ Database::Database(const std::string &connection_string)
   }
 }
 
-int Database::insertDocument(const std::string &url,
-                             const std::string &content) {
+int Database::insertDocument(const std::string &url, const std::string &content) {
   try {
     pqxx::work txn(conn);
-    auto result = txn.exec("INSERT INTO documents (url, content) VALUES (" +
-                           txn.quote(url) + ", " + txn.quote(content) +
-                           ") RETURNING id;");
+    pqxx::result result = txn.exec(
+        "INSERT INTO documents (url, content) VALUES (" +
+        txn.quote(url) + ", " + txn.quote(content) +
+        ") ON CONFLICT (url) DO NOTHING RETURNING id;"
+    );
+
+    int docId;
+    if (!result.empty()) {
+      docId = result[0][0].as<int>();
+      std::cout << "[DEBUG] Document inserted with ID: " << docId << std::endl;
+    } else {
+      pqxx::result fallback = txn.exec("SELECT id FROM documents WHERE url = " + txn.quote(url) + ";");
+      if (!fallback.empty()) {
+        docId = fallback[0][0].as<int>();
+        std::cout << "[DEBUG] Document already exists, ID: " << docId << std::endl;
+      } else {
+        std::cerr << "[ERROR] Failed to get ID for URL: " << url << std::endl;
+        return -1;
+      }
+    }
+
     txn.commit();
-    return result[0][0].as<int>();
+    return docId;
   } catch (const std::exception &e) {
     std::cerr << "Database error: " << e.what() << std::endl;
     return -1;
@@ -41,41 +58,88 @@ int Database::insertWord(const std::string &word) {
   }
 }
 
-void Database::insertWordsWithFrequency(
-    int docId, const std::unordered_map<std::string, int> &wordFreq) {
+// void Database::insertWordsWithFrequency(int docId, const std::unordered_map<std::string, int>& wordFreq) {
+//   try {
+//     pqxx::work txn(conn);
+//     for (const auto& [word, freq] : wordFreq) {
+//       std::cout << "[DEBUG] Inserting word: " << word << ", freq: " << freq << std::endl;
+//
+//       auto result = txn.exec(
+//           "INSERT INTO words (word) VALUES (" + txn.quote(word) + ") "
+//           "ON CONFLICT (word) DO NOTHING RETURNING id;"
+//       );
+//
+//       int wordId;
+//       if (!result.empty()) {
+//         wordId = result[0][0].as<int>();
+//       } else {
+//         auto selectRes = txn.exec("SELECT id FROM words WHERE word = " + txn.quote(word) + ";");
+//         if (!selectRes.empty()) {
+//           wordId = selectRes[0][0].as<int>();
+//         } else {
+//           std::cerr << "[ERROR] Word ID not found for: " << word << std::endl;
+//           continue;
+//         }
+//       }
+//
+//       txn.exec(
+//           "INSERT INTO inverted_index (doc_id, word_id, frequency) VALUES (" +
+//           txn.quote(docId) + ", " + txn.quote(wordId) + ", " + txn.quote(freq) + ") "
+//           "ON CONFLICT (doc_id, word_id) DO UPDATE SET frequency = EXCLUDED.frequency;"
+//       );
+//     }
+//     txn.commit();
+//   } catch (const std::exception& e) {
+//     std::cerr << "Database error in insertWordsWithFrequency: " << e.what() << std::endl;
+//   }
+// }
+
+void Database::insertWordsWithFrequency(int docId, const std::unordered_map<std::string, int>& wordFreq) {
   try {
     pqxx::work txn(conn);
 
-    for (const auto &[word, freq] : wordFreq) {
-      // Вставка слова, если оно ещё не существует
-      pqxx::result wordRes = txn.exec_params(
-          "INSERT INTO words (word) VALUES ($1) "
-          "ON CONFLICT (word) DO NOTHING RETURNING id;",
-          word);
+    for (const auto& [word, freq] : wordFreq) {
+      int wordId = -1;
 
-      int wordId;
-      if (!wordRes.empty()) {
-        wordId = wordRes[0][0].as<int>();
+      pqxx::result wordInsert = txn.exec(
+          "INSERT INTO words (word) VALUES (" + txn.quote(word) + ") "
+          "ON CONFLICT (word) DO NOTHING RETURNING id;"
+      );
+
+      if (!wordInsert.empty()) {
+        wordId = wordInsert[0][0].as<int>();
+        std::cout << "[DEBUG] Inserted word: " << word << " (new id: " << wordId << ")" << std::endl;
       } else {
-        // Если слово уже есть, получаем его id
-        wordRes =
-            txn.exec_params("SELECT id FROM words WHERE word = $1;", word);
-        wordId = wordRes[0][0].as<int>();
+        pqxx::result wordSelect = txn.exec(
+            "SELECT id FROM words WHERE word = " + txn.quote(word) + ";"
+        );
+
+        if (!wordSelect.empty()) {
+          wordId = wordSelect[0][0].as<int>();
+          std::cout << "[DEBUG] Fetched word id: " << wordId << " for word: " << word << std::endl;
+        } else {
+          std::cerr << "[ERROR] Word not found: " << word << std::endl;
+          continue;
+        }
       }
 
-      // Добавление или обновление частоты слова для документа
-      txn.exec_params(
-          "INSERT INTO index (doc_id, word_id, frequency) VALUES ($1, $2, $3) "
-          "ON CONFLICT (doc_id, word_id) DO UPDATE SET frequency = "
-          "EXCLUDED.frequency;",
-          docId, wordId, freq);
+      txn.exec(
+          "INSERT INTO inverted_index (doc_id, word_id, frequency) VALUES (" +
+          txn.quote(docId) + ", " + txn.quote(wordId) + ", " + txn.quote(freq) + ") "
+          "ON CONFLICT (doc_id, word_id) DO UPDATE SET frequency = EXCLUDED.frequency;"
+      );
+
+      std::cout << "[DEBUG] Indexed: " << word << " -> docId: " << docId << ", freq: " << freq << std::endl;
     }
 
     txn.commit();
-  } catch (const std::exception &e) {
-    std::cerr << "insertWordsWithFrequency error: " << e.what() << std::endl;
+    std::cout << "[DEBUG] insertWordsWithFrequency committed." << std::endl;
+  } catch (const std::exception& e) {
+    std::cerr << "[ERROR] insertWordsWithFrequency: " << e.what() << std::endl;
   }
 }
+
+
 
 int Database::getWordId(const std::string &word) {
   try {
