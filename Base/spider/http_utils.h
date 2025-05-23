@@ -12,7 +12,6 @@
 #include <iostream>
 #include <regex>
 #include <string>
-#include <vector>
 
 #include "link.h"
 
@@ -25,4 +24,5 @@ namespace ssl = boost::asio::ssl;
 using tcp = boost::asio::ip::tcp;
 
 bool isText(const boost::beast::multi_buffer::const_buffers_type& b);
-std::string getHtmlContent(const Link& link);
+
+std::string get_html_content(const Link& link);

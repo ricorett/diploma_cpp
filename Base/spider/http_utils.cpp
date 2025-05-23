@@ -12,7 +12,7 @@ bool isText(const boost::beast::multi_buffer::const_buffers_type& b) {
   return true;
 }
 
-std::string getHtmlContent(const Link& link) {
+std::string get_html_content(const Link& link) {
   std::string result;
 
   try {

@@ -1,33 +1,43 @@
-// #include <Windows.h>
+#include "http_connection.h"
+#include "../config/config_utils.h"
+#include <boost/asio.hpp>
 #include <iostream>
 
-#include "../config/config_utils.h"
-#include "http_connection.h"
-
 int main() {
-  //	SetConsoleCP(CP_UTF8);
-  //	SetConsoleOutputCP(CP_UTF8);
-
   try {
-    Database db(loadConnectionString("../config/config.ini"));
-    db.initializeTables();
+    // Инициализация базы данных
+    Database db(load_connection_string("../config/config.ini"));
+    db.initialize_tables();
 
-    auto const address = net::ip::make_address("0.0.0.0");
-    unsigned short port = 8080;
+    // Настройка сервера
+    net::io_context ioc;
+    const unsigned short port = static_cast<unsigned short>(
+        load_server_port("../config/config.ini")
+    );
+    tcp::acceptor acceptor(ioc, {tcp::v4(), port});
+    tcp::socket socket(ioc);
 
-    net::io_context ioc{1};
+    // Объявляем обработчик с явным типом
+    std::function<void(beast::error_code)> accept_handler;
 
-    tcp::acceptor acceptor{ioc, {address, port}};
-    tcp::socket socket{ioc};
-    httpServer(acceptor, socket, db);
+    // Определяем обработчик
+    accept_handler = [&](beast::error_code ec) {
+      if (!ec) {
+        std::make_shared<HttpConnection>(std::move(socket), db)->start();
+      }
 
-    std::cout << "Open browser and connect to http://localhost:8080 to see the "
-                 "web server operating"
-              << std::endl;
+      // Рекурсивный вызов с захватом по значению
+      acceptor.async_accept(socket, accept_handler);
+    };
 
+    // Первоначальный вызов
+    acceptor.async_accept(socket, accept_handler);
+
+    std::cout << "Server started on port " << port << "\n";
     ioc.run();
-  } catch (std::exception const& e) {
-    std::cerr << "Error: " << e.what() << std::endl;
+  } catch (const std::exception& e) {
+    std::cerr << "Error: " << e.what() << "\n";
     return EXIT_FAILURE;
   }
+  return EXIT_SUCCESS;
 }

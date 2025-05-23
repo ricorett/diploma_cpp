@@ -1,131 +1,132 @@
-#include <condition_variable>
-#include <functional>
-#include <iostream>
-#include <mutex>
-#include <queue>
-#include <thread>
-#include <vector>
-
-#include "../config/config_utils.h"
-#include "../database/database.h"
 #include "html_parser.h"
+#include <curl/curl.h>
+#include <thread>
+#include <mutex>
+#include <condition_variable>
+#include <iostream>
+#include <unordered_set>
+#include "../database/database.h"
+#include "../config/config_utils.h"
 #include "http_utils.h"
+#include <boost/url.hpp>
+#include <chrono>
 
-std::mutex mtx;
-std::condition_variable cv;
-std::queue<std::function<void()>> tasks;
-bool exitThreadPool = false;
+class Spider {
+public:
+    Spider(Database& db, const std::string& start_url, int depth)
+           : db_(db), start_url_(start_url), max_depth_(depth) {}
 
-void threadPoolWorker(Database& db) {
-  std::unique_lock<std::mutex> lock(mtx);
-  while (!exitThreadPool || !tasks.empty()) {
-    if (tasks.empty()) {
-      cv.wait(lock);
-    } else {
-      auto task = tasks.front();
-      tasks.pop();
-      lock.unlock();
-      task();
-      lock.lock();
+    ~Spider() {
+        // Деструктор для ожидания завершения всех потоков
+        for (auto& t : workers_) {
+            if (t.joinable()) t.join();
+        }
     }
-  }
-}
-
-void parseLink(const Link& link, int depth, Database& db) {
-  try {
-    std::this_thread::sleep_for(std::chrono::milliseconds(500));
-
-    std::string html = getHtmlContent(link);
-    if (html.empty()) {
-      std::cout << "Failed to get HTML Content for: "
-                << link.hostName + link.query << std::endl;
-      return;
+    void run() {
+        crawl(start_url_, max_depth_);
     }
 
-    std::vector<std::string> words = extractWordsFromHtml(html);
-    if (words.empty()) {
-      std::cout << "No valid words extracted from: "
-                << link.hostName + link.query << std::endl;
-      return;
+private:
+    Database& db_;
+    std::string start_url_;
+    int max_depth_;
+    std::unordered_set<std::string> visited_;
+    std::mutex mutex_;
+
+    std::vector<std::thread> workers_;
+
+
+    std::string resolve_url(const std::string& base, const std::string& path) {
+        boost::urls::url base_url(base);
+        auto result = base_url.resolve(path);
+        return result.buffer();
     }
 
-    int docId = db.insertDocument(link.hostName + link.query, html);
-    if (docId == -1) {
-      std::cout << "Failed to insert document: " << link.hostName + link.query
-                << std::endl;
-      return;
+    void crawl(const std::string& url, int depth) {
+        if (depth < 0) return;
+
+        {
+            std::lock_guard<std::mutex> lock(mutex_);
+            if (!visited_.insert(url).second) return;
+        }
+
+        // Добавлена задержка между запросами
+        std::this_thread::sleep_for(std::chrono::milliseconds(500));
+
+        std::string html = fetch_html(url);
+        if (html.empty()) return;
+
+        // Добавлено логирование
+        std::cout << "Processing: " << url << " (depth: " << depth << ")\n";
+
+        int doc_id = db_.insert_document(url, html);
+        if (doc_id == -1) return;
+
+        auto words = extract_words(html);
+        std::unordered_map<std::string, int> word_freq;
+        for (const auto& word : words) word_freq[word]++;
+        db_.insert_words_frequency(doc_id, word_freq);
+
+        if (depth > 0) {
+            for (const auto& link : extract_links(html)) {
+                // Исправлено формирование URL
+                std::string full_url = resolve_url(url, link.query);
+
+                workers_.emplace_back([this, full_url, depth] {
+                    crawl(full_url, depth - 1);
+                });
+            }
+        }
     }
 
-    std::unordered_map<std::string, int> wordFrequency;
-    for (const auto& word : words) {
-      wordFrequency[word]++;
+
+    static size_t write_callback(char* ptr, size_t size, size_t nmemb, std::string* data) {
+        data->append(ptr, size * nmemb);
+        return size * nmemb;
     }
 
-    db.insertWordsWithFrequency(docId, wordFrequency);
+    std::string fetch_html(const std::string& url) {
+        CURL* curl = curl_easy_init();
+        if (!curl) {
+            std::cerr << "CURL init failed for: " << url << "\n";
+            return "";
+        }
 
-    std::cout << "Indexed document: " << link.hostName + link.query << " ("
-              << words.size() << " words, " << wordFrequency.size()
-              << " unique)" << std::endl;
+        std::string response;
 
-    // Добавление ссылок в очередь
-    if (depth > 0) {
-      std::vector<Link> links = {
-          {ProtocolType::HTTPS, "en.wikipedia.org", "/wiki/Wikipedia"},
-          {ProtocolType::HTTPS, "wikimediafoundation.org", "/"}};
+        // Добавлены параметры CURL
+        curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
+        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_callback);
+        curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response);
+        curl_easy_setopt(curl, CURLOPT_TIMEOUT, 10L);
+        curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
+        curl_easy_setopt(curl, CURLOPT_USERAGENT, "MySpider/1.0");
 
-      std::lock_guard<std::mutex> lock(mtx);
-      for (auto& subLink : links) {
-        tasks.emplace(
-            [subLink, depth, &db]() { parseLink(subLink, depth - 1, db); });
-      }
-      cv.notify_one();
+        CURLcode res = curl_easy_perform(curl);
+        if (res != CURLE_OK) {
+            std::cerr << "CURL failed (" << curl_easy_strerror(res)
+                     << "): " << url << "\n";
+        }
+
+        curl_easy_cleanup(curl);
+        return (res == CURLE_OK) ? response : "";
     }
-  } catch (const std::exception& e) {
-    std::cout << "Error parsing link " << link.hostName + link.query << ": "
-              << e.what() << std::endl;
-  }
-}
-
-void processStartUrl(const std::string& startUrl, int depth, Database& db) {
-  try {
-    Link link = parseLinkFromUrl(startUrl);
-    std::lock_guard<std::mutex> lock(mtx);
-    tasks.push([link, depth, &db]() { parseLink(link, depth, db); });
-    cv.notify_one();
-  } catch (const std::exception& e) {
-    std::cerr << "[ERROR] Invalid start URL: " << e.what() << std::endl;
-  }
-}
+};
 
 int main() {
-  try {
-    Database db(loadConnectionString("../config/config.ini"));
-    db.initializeTables();
+    try {
+        Config config("../config/config.ini");
+        Database db(config.db_connection());
+        db.initialize_tables();
 
-    int numThreads = std::thread::hardware_concurrency();
-    std::vector<std::thread> threadPool;
-    for (int i = 0; i < numThreads; ++i) {
-      threadPool.emplace_back([&db]() { threadPoolWorker(db); });
+        {
+            Spider crawler(db, config.start_url(), config.spider_depth());
+            crawler.run();
+
+        }
+    } catch (const std::exception& e) {
+        std::cerr << "Fatal error: " << e.what() << "\n";
+        return EXIT_FAILURE;
     }
-
-    std::string startUrl = loadStartUrl("../config/config.ini");
-    int depth = loadSpiderDepth("../config/config.ini");
-    processStartUrl(startUrl, depth, db);
-
-    std::this_thread::sleep_for(std::chrono::seconds(2));
-
-    {
-      std::lock_guard<std::mutex> lock(mtx);
-      exitThreadPool = true;
-      cv.notify_all();
-    }
-
-    for (auto& t : threadPool) {
-      t.join();
-    }
-
-  } catch (const std::exception& e) {
-    std::cerr << "Main error: " << e.what() << std::endl;
-  }
-  return 0;
+    return EXIT_SUCCESS;
 }

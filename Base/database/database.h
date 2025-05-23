@@ -1,28 +1,21 @@
 #pragma once
-
-#include <fmt/core.h>
-
-#include <boost/property_tree/ini_parser.hpp>
-#include <boost/property_tree/ptree.hpp>
-#include <format>
-#include <iostream>
 #include <pqxx/pqxx>
 #include <string>
-#include <unordered_map>
-
+#include <boost/algorithm/string/join.hpp>
 class Database {
- public:
-  explicit Database(const std::string& connection_string);
-  int insertDocument(const std::string& url, const std::string& content);
-  int insertWord(const std::string& word);
-  void insertIndex(int docId, int wordId, int frequency);
-  std::vector<std::pair<std::string, int>> searchDocuments(
-      const std::vector<std::string>& queryWords);
-  void insertWordsWithFrequency(
-      int docId, const std::unordered_map<std::string, int>& wordFreq);
-  void initializeTables();
+public:
+    explicit Database(const std::string& conn_str);
 
- private:
-  int getWordId(const std::string& word);
-  pqxx::connection conn;
+    void initialize_tables();
+    int insert_document(const std::string& url, const std::string& content);
+    void insert_words_frequency(int doc_id,
+                                    const std::unordered_map<std::string, int>& freq);
+    std::vector<std::pair<std::string, int>> search(const std::vector<std::string>& terms);
+
+private:
+    pqxx::connection conn_;
+
+    int get_word_id(pqxx::work& txn, const std::string& word);
 };
+
+std::string make_sql_array(const std::vector<std::string>& terms, pqxx::transaction_base& txn);
