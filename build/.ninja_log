@@ -1,0 +1,23 @@
+# ninja log v6
+35	1803	1750108524773937382	spider/CMakeFiles/SpiderApp.dir/main.cpp.o	31a9adc32c7a27ef
+2108	2177	1750108526847473096	spider/SpiderApp	a765ba25f205e2a1
+855	909	1750108525593634271	database/libDatabaseLib.a	9244a59af174c8b5
+17	3100	1750106306729645462	spider/CMakeFiles/SpiderApp.dir/http_utils.cpp.o	de6e654280633487
+8	156	1750173018223142663	/Users/kiton/Documents/SearchEngine/build/cmake_install.cmake	6a5c2e39dd739dd8
+8	156	1750173018225151604	/Users/kiton/Documents/SearchEngine/build/database/cmake_install.cmake	6a5c2e39dd739dd8
+8	156	1750173018228730114	/Users/kiton/Documents/SearchEngine/build/html_parser/cmake_install.cmake	6a5c2e39dd739dd8
+39	2108	1750108524777880057	spider/CMakeFiles/SpiderApp.dir/spider.cpp.o	98bf3d6226e4bf34
+42	1678	1750104526472942274	http_server/CMakeFiles/HttpServerApp.dir/http_server.cpp.o	ecaaf596050658b6
+21	1304	1750107286716131896	html_parser/CMakeFiles/HtmlParserLib.dir/html_parser.cpp.o	72b52e06a1eff07e
+21	2632	1750110496932866957	http_server/CMakeFiles/HttpServerApp.dir/http_connection.cpp.o	da60a5e57fa2b30f
+13	63	1750104245644811696	common/libCommonLib.a	ea0bfec36ceaae0c
+1	704	1750104165673294626	common/CMakeFiles/CommonLib.dir/ini_parser.cpp.o	5446a9bbfc1665c
+1305	1362	1750107287999763073	html_parser/libHtmlParserLib.a	c20056d121859de7
+8	156	1750173018224201654	/Users/kiton/Documents/SearchEngine/build/common/cmake_install.cmake	6a5c2e39dd739dd8
+34	854	1750108524773152088	database/CMakeFiles/DatabaseLib.dir/database.cpp.o	15c42d3740356e11
+8	156	1750173018231377216	/Users/kiton/Documents/SearchEngine/build/spider/cmake_install.cmake	6a5c2e39dd739dd8
+8	156	1750173018234196316	build.ninja	6a5c2e39dd739dd8
+8	156	1750173018232810495	/Users/kiton/Documents/SearchEngine/build/web/cmake_install.cmake	6a5c2e39dd739dd8
+2632	2690	1750110499543946311	http_server/HttpServerApp	bdb999c64816ba25
+18	1430	1750107441835234352	http_server/CMakeFiles/HttpServerApp.dir/main.cpp.o	a025e024cbfb749a
+8	156	1750173018232515789	/Users/kiton/Documents/SearchEngine/build/http_server/cmake_install.cmake	6a5c2e39dd739dd8
