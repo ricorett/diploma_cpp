@@ -8,14 +8,14 @@ int main(int argc,char** argv) {
         if(argc < 2){
             throw std::runtime_error("Need path to config");
         }
-
+        // Load configuration
         IniParser config(argv[1]);
         int port = config.getServerPort();
         
-
+        // Start HTTP server
         net::io_context ioc;
         tcp::endpoint endpoint{tcp::v4(), static_cast<unsigned short>(port)};
-        HttpServer server(ioc, endpoint);
+        HttpServer server(ioc, endpoint,config);
         
         std::cout << "HTTP server listening on port " << port << std::endl;
         ioc.run();

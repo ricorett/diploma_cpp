@@ -1,6 +1,8 @@
 #include "spider.hpp"
 #include "../html_parser/html_parser.hpp"
 #include <boost/algorithm/string.hpp>
+#include <boost/url/parse.hpp>
+#include <boost/url/url.hpp>
 #include <chrono>
 #include <iostream>
 #include <thread>
@@ -33,17 +35,46 @@ void Spider::add_url(const std::string &url, int depth) {
   if (depth > config.getMaxDepth())
     return;
 
+  // Normalize URL
+  std::string normalized_url;
+  try {
+    if (auto parsed = boost::urls::parse_uri(url)) {
+      if (parsed) {
+        boost::urls::url normalized_url(*parsed);
+        normalized_url.normalize();
+        // Use normalized_url instead of parsed
+      }
+      normalized_url = parsed->buffer();
+
+      // Fix double https
+      size_t dbl_proto = normalized_url.find("https:https://");
+      if (dbl_proto != std::string::npos) {
+        normalized_url.replace(dbl_proto, 8, "");
+      }
+    } else {
+      normalized_url = url;
+    }
+  } catch (...) {
+    normalized_url = url;
+  }
+
+  // Remove fragments
+  size_t fragment_pos = normalized_url.find('#');
+  if (fragment_pos != std::string::npos) {
+    normalized_url = normalized_url.substr(0, fragment_pos);
+  }
+
   {
     std::lock_guard<std::mutex> lock(visited_mutex);
-    if (visited_urls.find(url) != visited_urls.end()) {
+    if (visited_urls.find(normalized_url) != visited_urls.end()) {
       return;
     }
-    visited_urls.insert(url);
+    visited_urls.insert(normalized_url);
   }
 
   {
     std::lock_guard<std::mutex> lock(queue_mutex);
-    url_queue.push({url, depth});
+    url_queue.push({normalized_url, depth});
   }
   queue_cv.notify_one();
 }
@@ -73,9 +104,18 @@ void Spider::process_url(const std::string &url, int depth) {
   try {
     std::cout << "Processing: " << url << " (depth: " << depth << ")" << std::endl;
 
-    std::string html = download(url);
+    std::string final_url, html;
+    try {
+      auto result = download(url);
+      final_url   = result.first;
+      html        = result.second;
+    } catch (const std::exception &e) {
+      std::cerr << "Download error: " << e.what() << " for " << url << std::endl;
+      return;
+    }
+
     if (html.empty()) {
-      std::cerr << "Empty content: " << url << std::endl;
+      std::cerr << "Empty content: " << final_url << std::endl;
       return;
     }
 
@@ -91,10 +131,10 @@ void Spider::process_url(const std::string &url, int depth) {
       }
     }
 
-    db.addDocument(url, depth, word_counts);
+    db.addDocument(final_url, depth, word_counts);
 
     if (depth < config.getMaxDepth()) {
-      std::vector<std::string> links = HtmlParser::extractLinks(html, url);
+      std::vector<std::string> links = HtmlParser::extractLinks(html, final_url);
       for (const auto &link : links) {
         add_url(link, depth + 1);
       }

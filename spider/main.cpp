@@ -29,6 +29,7 @@ int main(int argc, char **argv) {
     Database db(conn_str);
     db.initialize();
 
+    // Start spider
     Spider spider(config, db);
     spider.run();
   } catch (const std::exception &e) {

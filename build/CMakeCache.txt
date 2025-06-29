@@ -284,6 +284,9 @@ boost_system_DIR:PATH=/opt/homebrew/lib/cmake/boost_system-1.88.0
 //The directory containing a CMake configuration file for boost_thread.
 boost_thread_DIR:PATH=/opt/homebrew/lib/cmake/boost_thread-1.88.0
 
+//The directory containing a CMake configuration file for boost_url.
+boost_url_DIR:PATH=/opt/homebrew/opt/boost/lib/cmake/boost_url-1.88.0
+
 //Path to a library.
 pkgcfg_lib_LIBPQXX_pqxx:FILEPATH=/opt/homebrew/Cellar/libpqxx/7.10.1/lib/libpqxx.dylib
 
@@ -549,6 +552,8 @@ boost_regex_DIR-ADVANCED:INTERNAL=1
 boost_system_DIR-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: boost_thread_DIR
 boost_thread_DIR-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: boost_url_DIR
+boost_url_DIR-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: pkgcfg_lib_LIBPQXX_pqxx
 pkgcfg_lib_LIBPQXX_pqxx-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: pkgcfg_lib__OPENSSL_crypto

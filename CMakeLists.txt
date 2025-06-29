@@ -19,16 +19,7 @@ set(OPENSSL_ROOT_DIR "${HOMEBREW_PREFIX}/opt/openssl@3")
 set(BOOST_ROOT "${HOMEBREW_PREFIX}/opt/boost")
 
 # Boost: добавляем недостающие компоненты
-find_package(Boost 1.88.0 REQUIRED COMPONENTS 
-    system
-    filesystem  # Добавлено
-    regex
-    thread
-    locale
-    program_options  # Добавлено
-    chrono  # Добавлено
-    atomic  # Добавлено
-)
+find_package(Boost 1.88.0 REQUIRED COMPONENTS url filesystem system regex locale program_options chrono atomic thread charconv)
 
 if(NOT Boost_FOUND)
     message(FATAL_ERROR "Could not find Boost")

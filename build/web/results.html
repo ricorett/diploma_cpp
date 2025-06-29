@@ -4,17 +4,35 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Search Results</title>
+    <link rel="stylesheet" href="/styles.css">
     <style>
-        body { font-family: Arial, sans-serif; margin: 40px; }
-        .result { margin-bottom: 20px; }
+        .result { margin-bottom: 20px; padding: 10px; border-bottom: 1px solid #eee; }
         .title { font-size: 18px; font-weight: bold; }
-        .url { color: #006621; font-size: 14px; }
+        .url { color: #006621; font-size: 14px; margin-top: 5px; }
+        .snippet { color: #545454; margin-top: 5px; font-size: 14px; }
+        .pagination { margin-top: 20px; }
+        .back-link { margin-top: 20px; display: block; }
     </style>
 </head>
 <body>
-    <h1>Search Results</h1>
-    <div id="results">
-        <!-- Results will be inserted here -->
+    <div class="search-box" style="margin-top:20px;">
+        <form action="/search" method="post">
+            <input type="text" name="q" value="{{query}}" placeholder="Enter your search query">
+            <input type="submit" value="Search">
+        </form>
     </div>
+    
+    <h1>Search Results for: {{query}}</h1>
+    <div id="results">
+        <!-- Сервер будет вставлять результаты здесь -->
+        {{results}}
+    </div>
+    
+    <!-- Добавлена пагинация -->
+    <div class="pagination">
+        {{pagination}}
+    </div>
+    
+    <a href="/" class="back-link">Back to search</a>
 </body>
 </html>

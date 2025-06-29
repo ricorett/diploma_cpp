@@ -4,7 +4,7 @@
 #include "http_utils.hpp"
 #include <condition_variable>
 #include <mutex>
-#include <queue>
+#include <queue> // Изменено на std::queue
 #include <thread>
 #include <unordered_set>
 
