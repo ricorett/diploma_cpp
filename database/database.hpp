@@ -4,6 +4,7 @@
 #include <mutex>
 #include <pqxx/pqxx>
 #include <string>
+#include <boost/locale/encoding_utf.hpp>
 
 class Database {
 public:

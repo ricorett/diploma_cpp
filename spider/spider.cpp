@@ -30,27 +30,21 @@ void Spider::run() {
 }
 
 void Spider::add_url(const std::string &url, int depth) {
-  if (done)
-    return;
-  if (depth > config.getMaxDepth())
+  if (done || depth > config.getMaxDepth())
     return;
 
-  // Normalize URL
   std::string normalized_url;
   try {
-    if (auto parsed = boost::urls::parse_uri(url)) {
-      if (parsed) {
-        boost::urls::url normalized_url(*parsed);
-        normalized_url.normalize();
-        // Use normalized_url instead of parsed
-      }
-      normalized_url = parsed->buffer();
+    // Парсим и нормализуем URL с помощью Boost.URL
+    auto parsed = boost::urls::parse_uri(url);
+    if (parsed) {
+      boost::urls::url url_obj = *parsed;
+      url_obj.normalize();
 
-      // Fix double https
-      size_t dbl_proto = normalized_url.find("https:https://");
-      if (dbl_proto != std::string::npos) {
-        normalized_url.replace(dbl_proto, 8, "");
-      }
+      // Удаляем фрагмент (часть после #)
+      url_obj.remove_fragment();
+
+      normalized_url = url_obj.buffer();
     } else {
       normalized_url = url;
     }
@@ -58,7 +52,23 @@ void Spider::add_url(const std::string &url, int depth) {
     normalized_url = url;
   }
 
-  // Remove fragments
+  // Дополнительная защита от дублирования протокола
+  static const std::vector<std::pair<std::string, std::string>> replacements = {
+    {"https://https://", "https://"},
+    {"http://https://", "https://"},
+    {"https://http://", "http://"},
+    {"http://http://", "http://"}
+  };
+
+  for (const auto& [from, to] : replacements) {
+    size_t pos = normalized_url.find(from);
+    if (pos != std::string::npos) {
+      normalized_url.replace(pos, from.length(), to);
+      break;
+    }
+  }
+
+  // Удаление фрагмента на случай, если парсинг не удался
   size_t fragment_pos = normalized_url.find('#');
   if (fragment_pos != std::string::npos) {
     normalized_url = normalized_url.substr(0, fragment_pos);

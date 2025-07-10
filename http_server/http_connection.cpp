@@ -144,88 +144,122 @@ void HttpConnection::handlePostSearch() {
 }
 
 void HttpConnection::performSearch(const std::string &query) {
-  try {
-    // Подключение к БД с паролем
-    std::string conn_str = "dbname=" + config_.getDbName() +
-                           " "
-                           "user=" +
-                           config_.getDbUser() +
-                           " "
-                           "password=" +
-                           config_.getDbPassword() +
-                           " "
-                           "host=" +
-                           config_.getDbHost() +
-                           " "
-                           "port=" +
-                           config_.getDbPort();
-    pqxx::connection c{conn_str};
+    try {
+        // Подключение к БД
+        std::string conn_str = "dbname=" + config_.getDbName() +
+                               " user=" + config_.getDbUser() +
+                               " password=" + config_.getDbPassword() +
+                               " host=" + config_.getDbHost() +
+                               " port=" + config_.getDbPort();
+        pqxx::connection c{conn_str};
+        pqxx::work txn{c};
 
-    // Безопасный запрос с параметрами
-    const char *sql = R"(
-      SELECT d.url 
-      FROM documents d 
-      JOIN document_word dw ON d.id = dw.document_id 
-      JOIN words w ON w.id = dw.word_id 
-      WHERE w.word ILIKE $1 
-      LIMIT 10
-    )";
+        // Разбиваем запрос на отдельные слова
+        std::vector<std::string> words;
+        boost::split(words, query, boost::is_any_of(" \t\r\n"), boost::token_compress_on);
 
-    pqxx::work   txn{c};
-    pqxx::result r = txn.exec_params(std::string_view(sql), "%" + query + "%");
+        // Удаляем пустые слова
+        words.erase(std::remove_if(words.begin(), words.end(),
+                    [](const std::string& s) { return s.empty(); }),
+                    words.end());
 
-    std::ifstream     template_file("../web/results.html");
-    std::stringstream template_buffer;
-    template_buffer << template_file.rdbuf();
-    std::string html = template_buffer.str();
+        // Если нет слов для поиска
+        if (words.empty()) {
+            std::ifstream template_file("../web/results.html");
+            std::stringstream template_buffer;
+            template_buffer << template_file.rdbuf();
+            std::string html = template_buffer.str();
 
-    // Replace placeholders
-    size_t pos;
+            size_t pos = html.find("{{results}}");
+            if (pos != std::string::npos) {
+                html.replace(pos, 11, "<p class='no-results'>Please enter a search term</p>");
+            }
 
-    // Replace query
-    pos = html.find("{{query}}");
-    if (pos != std::string::npos) {
-      html.replace(pos, 9, query);
+            response_.result(http::status::ok);
+            response_.set(http::field::content_type, "text/html");
+            beast::ostream(response_.body()) << html;
+            return;
+        }
+
+        // Формируем SQL-запрос для поиска по всем словам
+        std::string sql = R"(
+            SELECT d.url, SUM(dw.count) AS total_count
+            FROM documents d
+            JOIN document_word dw ON d.id = dw.document_id
+            JOIN words w ON w.id = dw.word_id
+            WHERE w.word IN ()";
+
+        // Добавляем плейсхолдеры для каждого слова
+        for (size_t i = 0; i < words.size(); ++i) {
+            sql += "$" + std::to_string(i + 1) + ",";
+        }
+        sql.pop_back(); // Удаляем последнюю запятую
+        sql += R"()
+            GROUP BY d.id
+            HAVING COUNT(DISTINCT w.word) = )" + std::to_string(words.size()) + R"(
+            ORDER BY total_count DESC
+            LIMIT 10
+        )";
+
+        // Подготавливаем параметры
+        std::vector<std::string> params;
+        for (const auto& word : words) {
+            params.push_back(word);
+        }
+
+        // Выполняем запрос
+        pqxx::result r = txn.exec_params(sql, params);
+
+        // Формируем HTML-результаты
+        std::ifstream template_file("../web/results.html");
+        std::stringstream template_buffer;
+        template_buffer << template_file.rdbuf();
+        std::string html = template_buffer.str();
+
+        // Заменяем плейсхолдер запроса
+        size_t pos = html.find("{{query}}");
+        if (pos != std::string::npos) {
+            html.replace(pos, 9, query);
+        }
+
+        // Заменяем плейсхолдер результатов
+        std::string results_html;
+        if (r.empty()) {
+            results_html = "<p class='no-results'>No results found</p>";
+        } else {
+            results_html = "<ul>";
+            for (auto row : r) {
+                std::string url = row["url"].as<std::string>();
+                results_html += "<li class='result'>";
+                results_html += "<div class='title'><a href=\"" + url + "\">" + url + "</a></div>";
+                results_html += "<div class='url'>" + url + "</div>";
+                results_html += "</li>";
+            }
+            results_html += "</ul>";
+        }
+
+        pos = html.find("{{results}}");
+        if (pos != std::string::npos) {
+            html.replace(pos, 11, results_html);
+        }
+
+        // Заменяем плейсхолдер пагинации
+        pos = html.find("{{pagination}}");
+        if (pos != std::string::npos) {
+            html.replace(pos, 14, "<span>Page 1 of 1</span>");
+        }
+
+        response_.result(http::status::ok);
+        response_.set(http::field::content_type, "text/html");
+        beast::ostream(response_.body()) << html;
+
+    } catch (const std::exception &e) {
+        response_.result(http::status::internal_server_error);
+        response_.set(http::field::content_type, "text/plain");
+        beast::ostream(response_.body()) << "Database error: " << e.what();
     }
 
-    // Replace results
-    std::string results_html;
-    if (r.empty()) {
-      results_html = "<p class='no-results'>No results found</p>";
-    } else {
-      results_html = "<ul>";
-      for (auto row : r) {
-        std::string url = row["url"].as<std::string>();
-        results_html += "<li class='result'>";
-        results_html += "<div class='title'><a href=\"" + url + "\">" + url + "</a></div>";
-        results_html += "<div class='url'>" + url + "</div>";
-        results_html += "</li>";
-      }
-      results_html += "</ul>";
-    }
-
-    pos = html.find("{{results}}");
-    if (pos != std::string::npos) {
-      html.replace(pos, 11, results_html);
-    }
-
-    // Replace pagination (simplified)
-    pos = html.find("{{pagination}}");
-    if (pos != std::string::npos) {
-      html.replace(pos, 14, "<span>Page 1 of 1</span>");
-    }
-
-    response_.result(http::status::ok);
-    response_.set(http::field::content_type, "text/html");
-    beast::ostream(response_.body()) << html;
-
-  } catch (const std::exception &e) {
-    response_.result(http::status::internal_server_error);
-    response_.set(http::field::content_type, "text/plain");
-    beast::ostream(response_.body()) << "Database error: " << e.what();
-  }
-
-  writeResponse();
+    writeResponse();
 }
 
 void HttpConnection::serveHomePage() {

@@ -32,25 +32,13 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="d52d549b-7800-476d-a27d-0b937d101c41" name="Changes" comment="document don't insert into database, but with new structure">
-      <change beforePath="$PROJECT_DIR$/Base/CMakeLists.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Base/config/CMakeLists.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Base/config/config.ini" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Base/config/config_utils.cpp" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Base/config/config_utils.h" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Base/database/CMakeLists.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Base/database/database.cpp" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Base/database/database.h" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Base/http_server/CMakeLists.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Base/http_server/http_connection.cpp" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Base/http_server/http_connection.h" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Base/http_server/main.cpp" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Base/spider/CMakeLists.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Base/spider/html_parser.cpp" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Base/spider/html_parser.h" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Base/spider/http_utils.cpp" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Base/spider/http_utils.h" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Base/spider/link.h" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Base/spider/main.cpp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/config.ini" beforeDir="false" afterPath="$PROJECT_DIR$/config.ini" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/database/database.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/database/database.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/database/database.hpp" beforeDir="false" afterPath="$PROJECT_DIR$/database/database.hpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/html_parser/html_parser.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/html_parser/html_parser.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/html_parser/html_parser.hpp" beforeDir="false" afterPath="$PROJECT_DIR$/html_parser/html_parser.hpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/spider/spider.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/spider/spider.cpp" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -146,6 +134,11 @@
     </key>
   </component>
   <component name="RunManager" selected="CMake Application.HttpServerApp">
+    <configuration default="true" type="CLionExternalRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" PASS_PARENT_ENVS_2="true">
+      <method v="2">
+        <option name="CLION.EXTERNAL.BUILD" enabled="true" />
+      </method>
+    </configuration>
     <configuration name="CppDiplomProject" type="CMakeListConfigurationType" factoryName="CMakeListConfigurationFactory">
       <method v="2" />
     </configuration>
@@ -229,6 +222,7 @@
       <workItem from="1750273635972" duration="13000" />
       <workItem from="1750273658348" duration="861000" />
       <workItem from="1750274673694" duration="1000" />
+      <workItem from="1752086372738" duration="5306000" />
     </task>
     <task id="LOCAL-00001" summary="add base files">
       <option name="closed" value="true" />
