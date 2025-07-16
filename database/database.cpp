@@ -10,7 +10,7 @@ Database::Database(const std::string &conn_str) {
 
 void Database::initialize() {
   std::lock_guard<std::mutex> lock(db_mutex);
-  pqxx::work                  tx(*conn);
+  pqxx::work tx(*conn);
 
   tx.exec("CREATE TABLE IF NOT EXISTS documents ("
           "    id SERIAL PRIMARY KEY,"
@@ -32,79 +32,76 @@ void Database::initialize() {
 
   tx.commit();
 }
+void Database::addDocument(const std::string &url, int depth,
+                           const std::map<std::string, int> &word_counts) {
+  std::lock_guard<std::mutex> lock(db_mutex);
+  pqxx::work tx(*conn);
 
+  try {
+    // Insert document
+    pqxx::result doc_res =
+        tx.exec_params("INSERT INTO documents (url, depth) VALUES ($1, $2) "
+                       "ON CONFLICT (url) DO NOTHING RETURNING id",
+                       url, depth);
 
-bool is_valid_utf8(const std::string& str) {
-    using namespace boost::locale::utf;
-    auto it = str.begin();
-    auto end = str.end();
-
-    while (it != end) {
-        code_point cp = utf_traits<char>::decode(it, end);
-        if (cp == incomplete || cp == illegal) {
-            return false;
-        }
+    if (doc_res.empty()) {
+      tx.commit(); // Commit empty transaction
+      return;
     }
-    return true;
-}
 
-void Database::addDocument(const std::string& url, int depth, const std::map<std::string, int>& word_counts) {
-    std::lock_guard<std::mutex> lock(db_mutex);
-    pqxx::work tx(*conn);
+    int doc_id = doc_res[0][0].as<int>();
+    int savepoint_counter = 0;
 
-    try {
-        pqxx::result doc_res = tx.exec_params(
-            "INSERT INTO documents (url, depth) VALUES ($1, $2) "
-            "ON CONFLICT (url) DO NOTHING RETURNING id",
-            url,
-            depth
-        );
+    for (const auto &[word, count] : word_counts) {
+      std::string savepoint_name = "sp_" + std::to_string(savepoint_counter++);
 
-        if (doc_res.empty()) {
-            tx.commit();
-            return;
+      try {
+        // Create savepoint
+        tx.exec("SAVEPOINT " + savepoint_name);
+
+        // Insert word
+        pqxx::result word_res =
+            tx.exec_params("INSERT INTO words (word) VALUES ($1) "
+                           "ON CONFLICT (word) DO NOTHING RETURNING id",
+                           word);
+
+        int word_id;
+        if (word_res.empty()) {
+          word_res =
+              tx.exec_params("SELECT id FROM words WHERE word = $1", word);
+          if (word_res.empty()) {
+            throw std::runtime_error("Word not found after conflict: " + word);
+          }
+          word_id = word_res[0][0].as<int>();
+        } else {
+          word_id = word_res[0][0].as<int>();
         }
 
-        int doc_id = doc_res[0][0].as<int>();
+        // Insert document-word relationship
+        tx.exec_params(
+            "INSERT INTO document_word (document_id, word_id, count) "
+            "VALUES ($1, $2, $3) ON CONFLICT DO NOTHING",
+            doc_id, word_id, count);
 
-        for (const auto& [word, count] : word_counts) {
-            // Пропускаем невалидные UTF-8 слова
-            if (!is_valid_utf8(word)) {
-                std::cerr << "Skipping invalid UTF-8 word: " << word << std::endl;
-                continue;
-            }
-
-            try {
-                pqxx::result word_res = tx.exec_params(
-                    "INSERT INTO words (word) VALUES ($1) "
-                    "ON CONFLICT (word) DO NOTHING RETURNING id",
-                    word
-                );
-
-                int word_id;
-                if (word_res.empty()) {
-                    word_res = tx.exec_params("SELECT id FROM words WHERE word = $1", word);
-                    word_id = word_res[0][0].as<int>();
-                } else {
-                    word_id = word_res[0][0].as<int>();
-                }
-
-                tx.exec_params(
-                    "INSERT INTO document_word (document_id, word_id, count) "
-                    "VALUES ($1, $2, $3) ON CONFLICT DO NOTHING",
-                    doc_id,
-                    word_id,
-                    count
-                );
-            } catch (const std::exception& e) {
-                // Логируем ошибку, но продолжаем обработку других слов
-                std::cerr << "Error processing word '" << word << "': " << e.what() << std::endl;
-            }
+        // Release savepoint
+        tx.exec("RELEASE SAVEPOINT " + savepoint_name);
+      } catch (const std::exception &e) {
+        // Rollback to savepoint on error
+        try {
+          tx.exec("ROLLBACK TO SAVEPOINT " + savepoint_name);
+        } catch (const std::exception &inner_e) {
+          // Critical error - abort entire transaction
+          std::cerr << "CRITICAL savepoint error: " << inner_e.what()
+                    << std::endl;
+          throw;
         }
-
-        tx.commit();
-    } catch (const std::exception& e) {
-        tx.abort();
-        std::cerr << "Database error in document processing: " << e.what() << std::endl;
+        std::cerr << "Skipped word '" << word << "': " << e.what() << std::endl;
+      }
     }
+
+    tx.commit();
+  } catch (const std::exception &e) {
+    tx.abort();
+    std::cerr << "Database error: " << e.what() << std::endl;
+  }
 }
