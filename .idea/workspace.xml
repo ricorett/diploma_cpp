@@ -31,14 +31,73 @@
     </configurations>
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="d52d549b-7800-476d-a27d-0b937d101c41" name="Changes" comment="document don't insert into database, but with new structure">
+    <list default="true" id="d52d549b-7800-476d-a27d-0b937d101c41" name="Changes" comment="fix spider and database">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/config.ini" beforeDir="false" afterPath="$PROJECT_DIR$/config.ini" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/database/database.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/database/database.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/database/database.hpp" beforeDir="false" afterPath="$PROJECT_DIR$/database/database.hpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/build/.cmake/api/v1/query/client-vscode/query.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/build/.cmake/api/v1/reply/cache-v2-9dcc80c485372c185cbc.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/build/.cmake/api/v1/reply/cmakeFiles-v1-32bd25b60eb7332ab9b3.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/build/.cmake/api/v1/reply/codemodel-v2-25c9e1a1a9b81bc93409.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/build/.cmake/api/v1/reply/directory-.-Debug-f5ebdc15457944623624.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/build/.cmake/api/v1/reply/directory-common-Debug-6a5c22a1ee7f2aca6d8e.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/build/.cmake/api/v1/reply/directory-database-Debug-a822cb5ce6262ba8f82c.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/build/.cmake/api/v1/reply/directory-html_parser-Debug-02436e42cbe7a10d224f.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/build/.cmake/api/v1/reply/directory-http_server-Debug-675f15c21d4a3199a018.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/build/.cmake/api/v1/reply/directory-spider-Debug-9241a5b173ce6b3e8675.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/build/.cmake/api/v1/reply/directory-web-Debug-01e88eaec3c1a6607050.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/build/.cmake/api/v1/reply/index-2025-06-29T17-37-49-0140.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/build/.cmake/api/v1/reply/target-CommonLib-Debug-14c631a837a186be4590.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/build/.cmake/api/v1/reply/target-DatabaseLib-Debug-40ba92e5d4a6c971bba6.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/build/.cmake/api/v1/reply/target-HtmlParserLib-Debug-7e10ca1b4fb96a955e6e.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/build/.cmake/api/v1/reply/target-HttpServerApp-Debug-67abdfe4c141d3bea0af.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/build/.cmake/api/v1/reply/target-SpiderApp-Debug-3c6f4cd5a495de54e7ca.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/build/.cmake/api/v1/reply/target-WebFiles-Debug-e9790f0637463b47086f.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/build/.cmake/api/v1/reply/toolchains-v1-d5d1f33019f757832e22.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/build/.ninja_deps" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/build/.ninja_log" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/build/CMakeCache.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/build/CMakeFiles/4.0.1/CMakeCCompiler.cmake" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/build/CMakeFiles/4.0.1/CMakeCXXCompiler.cmake" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/build/CMakeFiles/4.0.1/CMakeDetermineCompilerABI_C.bin" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/build/CMakeFiles/4.0.1/CMakeDetermineCompilerABI_CXX.bin" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/build/CMakeFiles/4.0.1/CMakeSystem.cmake" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/build/CMakeFiles/4.0.1/CompilerIdC/CMakeCCompilerId.c" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/build/CMakeFiles/4.0.1/CompilerIdC/a.out" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/build/CMakeFiles/4.0.1/CompilerIdCXX/CMakeCXXCompilerId.cpp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/build/CMakeFiles/4.0.1/CompilerIdCXX/a.out" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/build/CMakeFiles/CMakeConfigureLog.yaml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/build/CMakeFiles/InstallScripts.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/build/CMakeFiles/TargetDirectories.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/build/CMakeFiles/cmake.check_cache" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/build/CMakeFiles/rules.ninja" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/build/build.ninja" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/build/cmake_install.cmake" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/build/common/CMakeFiles/CommonLib.dir/ini_parser.cpp.o" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/build/common/cmake_install.cmake" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/build/common/libCommonLib.a" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/build/compile_commands.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/build/database/CMakeFiles/DatabaseLib.dir/database.cpp.o" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/build/database/cmake_install.cmake" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/build/database/libDatabaseLib.a" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/build/html_parser/CMakeFiles/HtmlParserLib.dir/html_parser.cpp.o" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/build/html_parser/cmake_install.cmake" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/build/html_parser/libHtmlParserLib.a" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/build/http_server/CMakeFiles/HttpServerApp.dir/http_connection.cpp.o" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/build/http_server/CMakeFiles/HttpServerApp.dir/http_server.cpp.o" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/build/http_server/CMakeFiles/HttpServerApp.dir/main.cpp.o" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/build/http_server/HttpServerApp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/build/http_server/cmake_install.cmake" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/build/http_server/config.ini" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/build/http_server/index.html" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/build/spider/CMakeFiles/SpiderApp.dir/http_utils.cpp.o" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/build/spider/CMakeFiles/SpiderApp.dir/main.cpp.o" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/build/spider/CMakeFiles/SpiderApp.dir/spider.cpp.o" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/build/spider/SpiderApp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/build/spider/cmake_install.cmake" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/build/spider/config.ini" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/build/web/cmake_install.cmake" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/build/web/index.html" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/build/web/results.html" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/html_parser/html_parser.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/html_parser/html_parser.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/html_parser/html_parser.hpp" beforeDir="false" afterPath="$PROJECT_DIR$/html_parser/html_parser.hpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/spider/spider.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/spider/spider.cpp" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -134,11 +193,6 @@
     </key>
   </component>
   <component name="RunManager" selected="CMake Application.HttpServerApp">
-    <configuration default="true" type="CLionExternalRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" PASS_PARENT_ENVS_2="true">
-      <method v="2">
-        <option name="CLION.EXTERNAL.BUILD" enabled="true" />
-      </method>
-    </configuration>
     <configuration name="CppDiplomProject" type="CMakeListConfigurationType" factoryName="CMakeListConfigurationFactory">
       <method v="2" />
     </configuration>
@@ -176,13 +230,13 @@
       </method>
     </configuration>
     <list>
+      <item itemvalue="CMake Debug.CppDiplomProject" />
       <item itemvalue="CMake Application.CommonLib" />
       <item itemvalue="CMake Application.DatabaseLib" />
       <item itemvalue="CMake Application.HtmlParserLib" />
       <item itemvalue="CMake Application.HttpServerApp" />
       <item itemvalue="CMake Application.SpiderApp" />
       <item itemvalue="CMake Application.WebFiles" />
-      <item itemvalue="CMake Debug.CppDiplomProject" />
     </list>
   </component>
   <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
@@ -222,7 +276,10 @@
       <workItem from="1750273635972" duration="13000" />
       <workItem from="1750273658348" duration="861000" />
       <workItem from="1750274673694" duration="1000" />
-      <workItem from="1752086372738" duration="5306000" />
+      <workItem from="1752086372738" duration="6489000" />
+      <workItem from="1752649861405" duration="60000" />
+      <workItem from="1752649964927" duration="9000" />
+      <workItem from="1752650001445" duration="77000" />
     </task>
     <task id="LOCAL-00001" summary="add base files">
       <option name="closed" value="true" />
@@ -280,7 +337,23 @@
       <option name="project" value="LOCAL" />
       <updated>1748032798423</updated>
     </task>
-    <option name="localTasksCounter" value="8" />
+    <task id="LOCAL-00008" summary="fix server, spider and database">
+      <option name="closed" value="true" />
+      <created>1752145478532</created>
+      <option name="number" value="00008" />
+      <option name="presentableId" value="LOCAL-00008" />
+      <option name="project" value="LOCAL" />
+      <updated>1752145478532</updated>
+    </task>
+    <task id="LOCAL-00009" summary="fix spider and database">
+      <option name="closed" value="true" />
+      <created>1752649893430</created>
+      <option name="number" value="00009" />
+      <option name="presentableId" value="LOCAL-00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1752649893430</updated>
+    </task>
+    <option name="localTasksCounter" value="10" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -310,7 +383,9 @@
     <MESSAGE value="Connection fixed, planning to refactor ini parsing" />
     <MESSAGE value="document don't insert into database" />
     <MESSAGE value="document don't insert into database, but with new structure" />
-    <option name="LAST_COMMIT_MESSAGE" value="document don't insert into database, but with new structure" />
+    <MESSAGE value="fix server, spider and database" />
+    <MESSAGE value="fix spider and database" />
+    <option name="LAST_COMMIT_MESSAGE" value="fix spider and database" />
   </component>
   <component name="XSLT-Support.FileAssociations.UIState">
     <expand />

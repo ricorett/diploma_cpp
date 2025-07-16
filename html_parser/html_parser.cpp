@@ -93,7 +93,7 @@ std::vector<std::string> HtmlParser::extractLinks(const std::string &html, const
 
           // Fix double https
           std::string fixed_url = abs_url->buffer();
-          size_t      dbl_proto = fixed_url.find("https:https://");
+          size_t      dbl_proto = fixed_url.find("https://https://");
           if (dbl_proto != std::string::npos) {
             fixed_url.replace(dbl_proto, 8, "");
           }
