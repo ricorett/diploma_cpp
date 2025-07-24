@@ -215,13 +215,12 @@ void HttpConnection::performSearch(const std::string &query) {
     template_buffer << template_file.rdbuf();
     std::string html = template_buffer.str();
 
-    // Replace placeholders
     size_t pos;
 
-    // Replace query
     pos = html.find("{{query}}");
-    if (pos != std::string::npos) {
+    while (pos != std::string::npos) {
       html.replace(pos, 9, query);
+      pos = html.find("{{query}}");
     }
 
     // Replace results
